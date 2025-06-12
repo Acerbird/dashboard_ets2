@@ -2,8 +2,6 @@ import pandas as pd
 from dash import Dash, dcc, html, Input, Output, State, dash_table, callback_context
 import plotly.express as px
 
-app = Dash(__name__)
-
 #define fuels and units
 fuel_types = {
     "Gas Oil": 0,
@@ -70,6 +68,9 @@ null_fig = px.choropleth(null_df,
 null_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},)                         
                             
 ini_dataframe = pd.DataFrame(data=0, index=vats.index, columns=["Additional Costs for 10.000 kWh of Natural Gas"])
+
+app = Dash(__name__)
+server = app.server
 
 app.layout = html.Div(
     style={
