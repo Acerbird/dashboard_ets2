@@ -1,5 +1,6 @@
 import pandas as pd
-from dash import Dash, dcc, html, Input, Output, State, dash_table, callback_context
+from dash import Dash, dcc, html, Input, Output, State, dash_table, callback_context, ctx
+from dash.exceptions import PreventUpdate
 import plotly.express as px
 
 #define fuels and units
@@ -26,6 +27,7 @@ conversion_coal = pd.read_excel("./assets/data/conversion_factors.xlsx", sheet_n
 
 vats["Country_Code"] = vats["Country"].str[:2]
 vats["Country"] = vats["Country"].str[5:]
+vats = vats.sort_values("Country")
 
 null_df = pd.DataFrame(0, index=vats["Country"], columns=["Values"])
 null_df["Country"] = null_df.index
@@ -33,6 +35,7 @@ null_df["Country"] = null_df.index
 vats = vats.set_index("Country")
 
 existing_price["Country"] = existing_price["Country"].str[5:]
+existing_price = existing_price.sort_values("Country")
 existing_price = existing_price.set_index("Country")
 for fuel in fuel_types.keys():
     for country in vats.index:
@@ -63,7 +66,8 @@ null_fig = px.choropleth(null_df,
                         basemap_visible=False,
                         projection="stereographic",
                         color_continuous_scale=px.colors.sequential.Blues,
-                        fitbounds="locations"
+                        fitbounds="locations",
+                        range_color=[-100,400]
 ) 
 null_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},)                         
                             
@@ -142,14 +146,29 @@ app.layout = html.Div(
                 html.Div([
                     html.Label("Set CO₂ price (€/ton):", style={"marginTop": "20px", "marginBottom": "50px"}),
                     dcc.Slider(
-                        id="co2_price",
+                        id="co2_price_slider",
                         min=0,
                         max=300,
                         value=50,
                         marks={0: "0", 150: "150", 300: "300"},
+                        step = 1,
                         tooltip={"placement": "bottom", "always_visible": True}
                     ),
-                ], style={"flex": "0 0 65%"}),
+                ], style={"flex": "0 0 50%"}),
+                html.Div([
+                    html.Label("Set CO₂ price:", style={"marginTop": "30px", "marginBottom": "10px"}),
+                    html.Div([
+                        dcc.Input(
+                            id="co2_price",
+                            type="number",
+                            value=50,
+                            style={"width": "100%", "padding": "8px"}
+                        ),
+                        html.Div([
+                            "€/tCO₂"
+                        ], style={"marginTop": "8px", "marginLeft": "5px"})
+                    ], style={"display": "flex"}),
+                ], style={"flex": "0 0 25%"}),
                 html.Div([
                     html.Label("Adjust maximum CO₂ price:", style={"marginTop": "30px", "marginBottom": "10px"}),
                     html.Div([
@@ -163,7 +182,8 @@ app.layout = html.Div(
                             "€/tCO₂"
                         ], style={"marginTop": "8px", "marginLeft": "5px"})
                     ], style={"display": "flex"}),
-                ], style={"flex": "0 0 35%"}),
+                ], style={"flex": "0 0 25%"}),
+
             ], style={"display": "flex", "marginRight": "20px"})
         ], style={"backgroundColor": "#ffffff", "padding": "20px", "borderRadius": "8px", "boxShadow": "0 2px 5px rgba(0,0,0,0.1)"}),
 
@@ -220,14 +240,17 @@ app.layout = html.Div(
 
 # Callback zum Aktualisieren des Sliders
 @app.callback(
-    Output("co2_price", "max"),
-    Output("co2_price", "marks"),
-    Input("max_price", "value")
+    Output("co2_price_slider", "max"),
+    Output("co2_price_slider", "marks"),
+    Output("co2_price_slider", "value", allow_duplicate=True),
+    State("co2_price", "value"),
+    Input("max_price", "value"),
+    prevent_initial_call=True
 )
-def update_slider_max(new_max):
+def update_slider_max(price_val, new_max):
     if new_max is None:
-        return 300, {0: "0", 300: "300"}  # fallback
-    return new_max, {0: "0", new_max: str(new_max)}
+        return 300, {0: "0", 300: "300"}, price_val  # fallback
+    return new_max, {0: "0", new_max: str(new_max)}, price_val
 
 
 @app.callback(
@@ -244,6 +267,25 @@ def update_unit_dropdown_options(fuel_input):
     else:
         return ["Fehler beim Laden der möglichen Einheiten"]
 
+
+@app.callback(
+    Output("co2_price_slider", 'value'),
+    Output('co2_price', 'value'),
+    Input("co2_price_slider", 'value'),
+    Input('co2_price', 'value'),
+    prevent_initial_call=True
+)
+def sync_slider_and_input(slider_val, input_val):
+    trigger = ctx.triggered_id
+
+    if trigger == 'co2_price_slider' and slider_val != input_val:
+        return slider_val, slider_val  # set both to slider_val
+    elif trigger == 'co2_price' and input_val != slider_val:
+        return input_val, input_val  # set both to input_val
+    else:
+        raise PreventUpdate  # no change needed
+
+
 @app.callback(
         Output("map", "figure"),
         Output("dataframe", "data"),
@@ -251,7 +293,7 @@ def update_unit_dropdown_options(fuel_input):
         Input("fuel_dropdown", "value"),
         Input("unit_dropdown", "value"),
         Input("consumption", "value"),
-        Input("co2_price", "value"),
+        Input("co2_price_slider", "value"),
         Input("country_dropdown", "value"),
         State("dataframe", "data"),
         State("map", "figure")
@@ -308,7 +350,8 @@ def calculations(fuel_input, unit_input, consumption_input, price_input, country
                         basemap_visible=False,
                         projection="stereographic",
                         color_continuous_scale=px.colors.sequential.Blues,
-                        fitbounds="locations"
+                        fitbounds="locations",
+                        range_color=[-100,400]
     ) 
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
                         coloraxis_colorbar=dict(
@@ -332,7 +375,7 @@ def calculations(fuel_input, unit_input, consumption_input, price_input, country
         State("consumption", "value"),
         State("fuel_dropdown", "value"),
         State("unit_dropdown", "value"),
-        State("co2_price", "value"),
+        State("co2_price_slider", "value"),
         Input("download_dataframe_button", "n_clicks"),
         prevent_initial_call=True
 )
