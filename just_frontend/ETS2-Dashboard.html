@@ -176,6 +176,48 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+.sources-section {
+  margin: 60px auto 40px;
+  max-width: 800px;
+  padding: 20px 30px;
+  background-color: #f5f7fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+}
+
+.sources-section h2 {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.sources-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sources-list li {
+  margin-bottom: 16px;
+}
+
+.sources-list a {
+  font-weight: 600;
+  color: #2c5cc5;
+  text-decoration: none;
+}
+
+.sources-list a:hover {
+  text-decoration: underline;
+}
+
+.sources-list span {
+  display: block;
+  color: #555;
+  margin-top: 4px;
+}
+
 </style>
 
 </head>
@@ -246,8 +288,39 @@
 <p>Your additional costs per year due to ETS2:</p>
 <div id="costs_text_output">-</div>
 
-<h2>Impact across Europe</h2>
+<h2>Additional costs across Europe</h2>
 <div id="map" style="width: 750px; height: 650px;"></div>
+
+<footer class="sources-section">
+  <h2>Sources</h2>
+  <p> This dashboard is a result of our own computation and is based on the following sources:</p>
+  <ul class="sources-list">
+    <li>
+      <a href="https://www.seai.ie/data-and-insights/seai-statistics/conversion-factors" target="_blank" rel="noopener">
+        Sustainable Energy Authority of Ireland – Conversion Factors
+      </a><br />
+      <span>An official source for energy conversion factors between different units and emission factors especially regarding CO₂ emissions.</span>
+    </li>
+    <li>
+      <a href="https://www.umweltbundesamt.de/sites/default/files/medien/479/publikationen/cc_29-2022_emission-factors-fossil-fuels.pdf" target="_blank" rel="noopener">
+        Umweltbundesamt – Emission Factors
+      </a><br />
+      <span>A second data source for emission factors to validate the Irish numbers.</span>
+    </li>
+    <li>
+      <a href="https://carbonpricingdashboard.worldbank.org/" target="_blank" rel="noopener">
+        World Bank – Carbon Pricing Dashboard
+      </a><br />
+      <span>Dashboard that shows details on direct carbon pricing instruments around the world.</span>
+    </li>
+    <li>
+      <a href="https://ec.europa.eu/taxation_customs/tedb/#/home" target="_blank" rel="noopener">
+        European Commission – Tax Database
+      </a><br />
+      <span>Data on the different VATs applied to fuels that are used for space heating. Also contains detailed information on CO₂ taxes already in place.</span>
+    </li>
+  </ul>
+</footer>
 
 <script>
 //////////////////////////////////////////////////////////
@@ -357,8 +430,8 @@ const conversion_factors = {
 
 
 function fuelConversionToKwh(unit, fuel, consumption) {
-  const factorObj = conversion_factors[fuel][unit]; // z.B. { kWh: 1, m³: 0.1, GJ: 0.0036 }
-  const factor = factorObj["kWh"]; // Faktor, um von 'unit' zu 'kWh' umzuwandeln
+  const factorObj = conversion_factors[fuel][unit];
+  const factor = factorObj["kWh"];
   if (factor === undefined) {
     // falls keine Umrechnung vorhanden, Fehlerbehandlung
     return NaN;
@@ -371,11 +444,11 @@ function calculateAdditionalCosts(fuel, unit, consumption, co2_price) {
   const co2_price_per_kg = co2_price / 1000;
   const add_price_per_kwh = {};
 
-  for (const country in vats) {
+  for (const country of Object.keys(vats)) {
     // Zusatzkosten pro kWh
     let addCost = co2_price_per_kg * emission_factors[fuel];
-    addCost *= (1 + vats[country][fuel]);
-    addCost -= existing_price[country][fuel];
+    addCost -= existing_price[country][fuel]; // first subtract the existing price
+    addCost *= (1 + vats[country][fuel]); // add the VAT that is collected on the additional costs
     add_price_per_kwh[country] = addCost;
   }
 
@@ -383,7 +456,7 @@ function calculateAdditionalCosts(fuel, unit, consumption, co2_price) {
   
   const costs = {};
   for (const country in add_price_per_kwh) {
-    costs[country] = +(add_price_per_kwh[country] * consumption_kwh).toFixed(2);
+    costs[country] = (add_price_per_kwh[country] * consumption_kwh).toFixed(2);
   }
   return costs;
 }
@@ -466,7 +539,8 @@ function populateCountryDropdown() {
   countryDropdown.innerHTML = ""; // alles löschen
 
   // Für jedes Land im Objekt vats eine Option erzeugen
-  for (const country of Object.keys(vats)) {
+  const country_array = Object.keys(vats).sort();
+  for (const country of country_array) {
     const option = document.createElement("option");
     option.value = country;
     option.textContent = country;

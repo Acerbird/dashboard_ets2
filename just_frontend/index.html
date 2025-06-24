@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ETS2 Kosten Rechner (JS Version)</title>
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
 
 <style>
   :root {
@@ -21,20 +21,24 @@
   }
 
   * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
   }
 
-  body {
-    margin: 0 auto;
-    padding: 40px 20px;
-    font-family: var(--font);
-    background-color: var(--bg);
-    color: var(--text);
-    max-width: 1000px;
-    line-height: 1.6;
+  html, body {
+      width: 100%;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden; /* Kein seitliches Scrollen */
+      background-color: #f4f6fa;
   }
 
-  h1, h2 {
+  .viewport {
+    width: 100vw;
+    position: relative;
+  }
+
+  h1, h2, h3 {
     color: var(--primary);
     margin-bottom: 0.6em;
     font-weight: 700;
@@ -43,7 +47,65 @@
   p {
     margin-bottom: 1.5em;
     color: #555;
+    text-align: center;
   }
+
+  .container {
+  display: flex;
+  width: 200vw;      
+  transition: transform 0.5s ease-in-out;
+  background: rgb(204, 222, 228);
+}
+
+.page {
+      width: 100vw;
+      flex-shrink: 0;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+.dashboard {
+  background: #f9f9f9;
+}
+
+.explanation {
+  background: #eef;
+  height: 50%;
+}
+
+.content-container-dashboard  {
+  width: 1050px;
+  border-radius: 25px;
+  padding: 20px;
+  background: rgb(189, 225, 228);
+  box-shadow: 10px 5px 5px rgb(142, 169, 172);
+  position: relative;
+
+}
+
+.content-container-explanation {
+  width: 800px;
+  background: lightcyan;
+  position: relative;
+}
+
+button {
+  margin-top: 2rem;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  background-color: #2e7be4;
+  color: white;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #1a5fd0;
+}
 
   label {
     display: block;
@@ -65,10 +127,77 @@
     transition: var(--transition);
   }
 
-  input[type="range"] {
-    height: 36px;
-    background-color: transparent;
-  }
+  input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: lightblue;
+  border-radius: 4px;
+  outline: none;
+  margin: 10px 0;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: blue;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s ease;
+  margin-top: -5px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 8px;
+  background: lightblue;
+  border-radius: 4px;
+}
+
+/* Firefox */
+input[type=range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: blue;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+}
+input[type=range]::-moz-range-track {
+  height: 8px;
+  background: lightblue;
+  border-radius: 4px;
+}
+
+/* IE / Edge Legacy */
+input[type=range]::-ms-thumb {
+  width: 20px;
+  height: 20px;
+  background: blue;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+}
+input[type=range]::-ms-track {
+  height: 8px;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: lightblue;
+  border-radius: 4px;
+}
+input[type=range]::-ms-fill-upper {
+  background: lightblue;
+  border-radius: 4px;
+}
 
   .flex-row {
     display: flex;
@@ -127,6 +256,7 @@
       font-size: 1.7rem;
     }
   }
+
 .co2-price-row {
   display: flex;
   align-items: flex-end;  /* sorgt dafür, dass alle Controls an der unteren Linie ausgerichtet sind */
@@ -138,7 +268,10 @@
   flex: 2;
   margin: 0;
   padding: 0;
-  /* width: 100%; */  /* besser rauslassen, Flex macht das */
+}
+
+.co2-slider div span:nth-child(2) {
+  margin-left: 8px; /* nach rechts verschieben */
 }
 
 .co2-slider input[type=range] {
@@ -176,53 +309,150 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+.sources-section {
+  margin: 60px auto 40px;
+  max-width: 800px;
+  padding: 20px 30px;
+  background-color: #f5f7fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+}
+
+.sources-section h2 {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.sources-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sources-list li {
+  margin-bottom: 16px;
+}
+
+.sources-list a {
+  font-weight: 600;
+  color: #2c5cc5;
+  text-decoration: none;
+}
+
+.sources-list a:hover {
+  text-decoration: underline;
+}
+
+.sources-list span {
+  display: block;
+  color: #555;
+  margin-top: 4px;
+}
+
+#map {
+  margin: 0 auto;
+  width: 100%;       /* volle Containerbreite */
+  height: 650px;     /* oder wie du es brauchst */
+}
+
+.centered-box {
+  margin: 0 auto;
+  width: 300px; /* oder ein anderer fixer Wert */
+}
+
+.language-toggle {
+  position: absolute;
+  top: -20px;
+  right: 0px;
+  display: flex;
+  gap: 0px;
+}
+
+.language-toggle button {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.language-toggle button:hover {
+  transform: scale(1.2);
+}
+
+.hidden {
+  visibility: hidden;
+  position: absolute;
+  left: -9999px;
+}
+
 </style>
 
 </head>
 <body>
 
-<h1>How much will ETS2 cost you?</h1>
-<p>
-  In 2027 ETS2 will be rolled out across the EU. The main part of ETS2 is a carbon pricing mechanism for transportation and heating.
-  With this tool, explore how heating price increases may affect you and Europe.
+<div class="container">
+<div class="page dashboard">
+<div class="content-container-dashboard">
+  <div class="language-toggle">
+  <button onclick="switchLanguage('de')" type="button" titel="Deutsch">
+      <img src="https://flagcdn.com/w40/de.png" alt="Deutsch" />
+  </button>
+  <button onclick="switchLanguage('en')" type="button" titel="English">
+      <img src="https://flagcdn.com/w40/gb.png" alt="English" />
+  </button>
+</div>
+
+<h1 class="lang-en hidden">How much will ETS2 cost you?</h1>
+<h1 class="lang-de">Wie teuer wird der ETS2 für dich?</h1>
+
+<p class="lang-en hidden">
+  In 2027, ETS2 will be rolled out across the EU. The main part of ETS2 is a carbon pricing mechanism for transportation and heating.<br /><br />
+
+  Here, you can find out, how to use this dashboard: <button onclick="showExplanation()">More information</button><br /><br />
+
+  At the bottom of this site, you can find the data sources that were used for these computations.
 </p>
 
+<p class="lang-de">
+  Im Jahr 2027 wird das ETS2-System in der gesamten EU eingeführt. Der zentrale Bestandteil von ETS2 ist ein CO₂-Bepreisungsmechanismus für den Verkehrs- und Gebäudesektor.<br /><br />
+
+  Hier findest du eine Erklärung, wie dieses Dashboard funktioniert: <button onclick="showExplanation()">Mehr erfahren</button><br /><br />
+
+  Am Ende dieser Seite findest du die Datenquellen, die für diese Berechnungen verwendet wurden.
+</p>
+
+
+<h2 class="lang-en hidden">Choose your heating variables</h2>
+<h2 class="lang-de">Wähle deine Heizungsvariablen</h2>
 <div class="flex-row">
   <div class="flex-1">
-    <label for="fuel_dropdown">Heating fuel</label><br />
-    <select id="fuel_dropdown">
-      <option value="Gas Oil">Gas Oil</option>
-      <option value="Natural Gas" selected>Natural Gas</option>
-      <option value="Coal">Coal</option>
-    </select>
+    <label class="lang-en hidden" for="fuel_dropdown">Heating fuel</label><br />
+    <label class="lang-de" for="fuel_dropdown">Heizmittel</label><br />
+    <select id="fuel_dropdown"></select>
   </div>
   <div class="flex-1">
-    <label for="consumption">Yearly Consumption</label><br />
+    <label class="lang-en hidden" for="consumption">Yearly Consumption</label><br />
+    <label class="lang-de" for="consumption">Jahresverbrauch</label><br />
     <input type="number" id="consumption" value="10000" min="0" />
   </div>
   <div class="flex-1">
-    <label for="unit_dropdown">Unit</label><br />
-    <select id="unit_dropdown">
-      <option value="kWh" selected>kWh</option>
-      <option value="m³">m³</option>
-      <option value="GJ">GJ</option>
-    </select>
+    <label class="lang-en hidden" for="unit_dropdown">Unit</label><br />
+    <label class="lang-de" for="unit_dropdown">Einheit</label><br />
+    <select id="unit_dropdown"></select>
   </div>
 </div>
 
-<label for="country_dropdown">Choose your country:</label><br />
-<select id="country_dropdown" style="width: 100%; margin-bottom: 20px;">
-  <option value="Germany" selected>Germany</option>
-  <option value="France">France</option>
-  <option value="Italy">Italy</option>
-  <option value="Spain">Spain</option>
-  <option value="Poland">Poland</option>
-  <!-- Hier mehr Länder hinzufügen -->
-</select>
+<label class="lang-en hidden" for="country_dropdown">Choose your country:</label><br />
+<label class="lang-de" for="country_dropdown">Wähle dein Land aus:</label><br />
+<select id="country_dropdown" style="width: 100%; margin-bottom: 20px;"></select>
 
 <div class="co2-price-row">
   <div class="co2-slider">
-    <label for="co2_price_slider">Set CO₂ price (€/tonCO₂):</label><br />
+    <label class="lang-en hidden" for="co2_price_slider">Set CO₂ price (€/tonCO₂):</label><br />
+    <label class="lang-de" for="co2_price_slider">Wähle einen CO₂ Preis (€/tonCO₂) aus:</label><br />
     <input type="range" id="co2_price_slider" min="0" max="300" step="1" value="50" style="width: 100%;" />
     <div style="display:flex; justify-content: space-between;">
       <span>0</span><span>150</span><span>300</span>
@@ -235,36 +465,162 @@
     </div>
   </div>
   <div class="co2-input">
-    <label for="max_price">Adjust maximum CO₂ price:</label><br />
+    <label class="lang-en hidden" for="max_price">Adjust maximum CO₂ price:</label><br />
+    <label class="lang-de" for="max_price">Maximaler Wert:</label><br />
     <div class="input-inline">
       <input type="number" id="max_price" value="300" min="0" />
       <span>€/tCO₂</span>
     </div>
   </div>
 </div>
-
-<p>Your additional costs per year due to ETS2:</p>
+<br />
+<h2 class="lang-en hidden">Your additional heating costs per year due to ETS2:</h2>
+<h2 class="lang-de">Durch ETS2 ergeben sich für dich diese zusätzlichen jährlichen Heizkosten:</h2>
 <div id="costs_text_output">-</div>
 
-<h2>Impact across Europe</h2>
+<h2 class="lang-en hidden">Additional costs across Europe</h2>
+<h2 class="lang-de">Zusätzliche Kosten im Rest Europas</h2>
 <div id="map" style="width: 750px; height: 650px;"></div>
 
+<footer class="sources-section">
+  <h2 class="lang-en hidden">Sources</h2>
+  <h2 class="lang-de">Quellen</h2>
+  <p class="lang-en hidden">This dashboard is a result of our own computation and is based on the following sources:</p>
+  <p class="lang-de">Dieses Dashboard beruht auf unseren eigenen Berechnungen, welche sich auf die folgenden Quellen stützen:</p>
+  <ul class="sources-list">
+    <li>
+      <a class="lang-en hidden" href="https://www.seai.ie/data-and-insights/seai-statistics/conversion-factors" target="_blank" rel="noopener">
+        Sustainable Energy Authority of Ireland – Conversion Factors
+      </a><br />
+      <a class="lang-de" href="https://www.seai.ie/data-and-insights/seai-statistics/conversion-factors" target="_blank" rel="noopener">
+        Sustainable Energy Authority of Ireland – Conversion Factors
+      </a><br />
+      <span class="lang-en hidden">An official source for energy conversion factors between different units and emission factors especially regarding CO₂ emissions.</span>
+      <span class="lang-de">Eine offizielle Quelle zu Umrechnungsfaktoren zwischen verschiedenen Verbrauchseinheiten und für CO₂ Emissionsfaktoren von verschiedenen Heizmitteln.</span>
+    </li>
+    <li>
+      <a class="lang-en hidden" href="https://www.umweltbundesamt.de/sites/default/files/medien/479/publikationen/cc_29-2022_emission-factors-fossil-fuels.pdf" target="_blank" rel="noopener">
+        Umweltbundesamt – Emission Factors
+      </a><br />
+      <a class="lang-de" href="https://www.umweltbundesamt.de/sites/default/files/medien/479/publikationen/cc_29-2022_emission-factors-fossil-fuels.pdf" target="_blank" rel="noopener">
+        Umweltbundesamt – Emissionsfaktoren
+      </a><br />
+      <span class="lang-en hidden">A second data source for emission factors to validate the Irish numbers.</span>
+      <span class="lang-de">Eine zweite Datenquelle für Emissionsfaktoren zur Validierung der irischen Zahlen.</span>
+    </li>
+    <li>
+      <a class="lang-en hidden" href="https://carbonpricingdashboard.worldbank.org/" target="_blank" rel="noopener">
+        World Bank – Carbon Pricing Dashboard
+      </a><br />
+      <a class="lang-de" href="https://carbonpricingdashboard.worldbank.org/" target="_blank" rel="noopener">
+        Welt Bank – Carbon Pricing Dashboard
+      </a><br />
+      <span class="lang-en hidden">Dashboard that shows details on direct carbon pricing instruments around the world.</span>
+      <span class="lang-de">Ein Dashboard welches detailliert die aktuellen CO₂-Bepreisungsmechanismen auf der ganzen Welt darstellt.</span>
+    </li>
+    <li>
+      <a class="lang-en hidden" href="https://ec.europa.eu/taxation_customs/tedb/#/home" target="_blank" rel="noopener">
+        European Commission – Tax Database
+      </a><br />
+      <a class="lang-de" href="https://ec.europa.eu/taxation_customs/tedb/#/home" target="_blank" rel="noopener">
+        Europäische Kommission – Datenportal zu Steuern in europäischen Ländern
+      </a><br />
+      <span class="lang-en hidden">Data on the different VATs applied to fuels that are used for space heating. Also contains detailed information on CO₂ taxes already in place.</span>
+      <span class="lang-de">Daten zu den Umsatzsteuern auf verschiedene Heizmittel, wenn sie zum privaten Heizen benutzt werden.</span>
+  </ul>
+</footer>
+</div>
+</div>
+<div class="page explanation">
+<div class="content-container-explanation">
+  <div class="language-toggle">
+  <button onclick="switchLanguage('de')" type="button" titel="Deutsch">
+      <img src="https://flagcdn.com/w40/de.png" alt="Deutsch" />
+  </button>
+  <button onclick="switchLanguage('en')" type="button" titel="English">
+      <img src="https://flagcdn.com/w40/gb.png" alt="English" />
+  </button>
+</div>
+  <button class="lang-en hidden" onclick="hideExplanation()">← Back to the dashboard</button>
+  <button class="lang-de" onclick="hideExplanation()">← Zurück zum Dashboard</button>
+
+  <h2 class="lang-en hidden">How to use this dashboard</h2>
+  <h2 class="lang-de">Wie funktioniert dieses Dashboard</h2>
+
+  <p class="lang-en hidden">
+  This dashboard can be used to compute the additional costs due to ETS2 that your household will be faced with. You can choose the heating fuel that you use for space heating, your yearly consumption, and the corresponding unit.<br /><br />
+
+  After choosing your country, you can try different price levels for the CO₂ price. If you want to set the price higher than 300 €/tCO₂, you can adjust the maximum value using the input field on the right-hand side.<br /><br />
+
+  All your chosen variables are then used to compute your individual additional cost, as well as the additional cost for households with the same heating fuel and the same consumption in all other European countries.<br /><br />
+
+  The value for your chosen country will be visible in the text field below the price slider. The values for all European countries can be viewed in the map below that text field.<br /><br />
+</p>
+
+<p class="lang-de">
+  Mit diesem Dashboard kannst du die zusätzlichen Heizkosten berechnen, die durch ETS2 für deinen Haushalt entstehen. Du kannst den Brennstoff auswählen, den du für die Raumheizung nutzt, sowie deinen jährlichen Verbrauch und die passende Einheit.<br /><br />
+
+  Nachdem du dein Land ausgewählt hast, kannst du verschiedene Preisniveaus für den CO₂-Preis ausprobieren. Möchtest du einen Preis über 300 €/tCO₂ festlegen, kannst du den Maximalwert über das Eingabefeld auf der rechten Seite anpassen.<br /><br />
+
+  Alle von dir gewählten Eingaben werden verwendet, um deine individuellen Zusatzkosten zu berechnen - sowie die Zusatzkosten für Haushalte mit demselben Heizmittel und Verbrauch in allen anderen europäischen Ländern.<br /><br />
+
+  Der Wert für dein ausgewähltes Land wird im Textfeld unter dem CO₂-Preisschieberegler angezeigt. Die Werte für alle europäischen Länder kannst du in der Karte unterhalb dieses Textfeldes sehen.<br /><br />
+</p>
+</div>
+</div>
+</div>
 <script>
 //////////////////////////////////////////////////////////
 // Definition der Variablen und der (festen) Daten
 
-const fuel_types = ["Gas Oil", "Natural Gas", "Coal"];
-const units_map = { "kWh": 0, "liter": 1, "kg": 2, "m³": 3, "GJ": 4 };
+const countryNameMap_de_to_en = {
+  "Deutschland": "Germany",
+  "Österreich": "Austria",
+  "Belgien": "Belgium",
+  "Bulgarien": "Bulgaria",
+  "Zypern": "Cyprus",
+  "Tschechien": "Czechia",
+  "Dänemark": "Denmark",
+  "Estland": "Estonia",
+  "Griechenland": "Greece",
+  "Spanien": "Spain",
+  "Finnland": "Finland",
+  "Frankreich": "France",
+  "Ungarn": "Hungary",
+  "Kroatien": "Croatia",
+  "Irland": "Ireland",
+  "Italien": "Italy",
+  "Litauen": "Lithuania",
+  "Luxemburg": "Luxembourg",
+  "Lettland": "Latvia",
+  "Malta": "Malta",
+  "Niederlande": "Netherlands",
+  "Polen": "Poland",
+  "Portugal": "Portugal",
+  "Rumänien": "Romania",
+  "Schweden": "Sweden",
+  "Slowenien": "Slovenia",
+  "Slowakei": "Slovak Republic" // oder "Slovakia"
+};
+
+const fuel_types = {
+  "en": ["Gas Oil", "Natural Gas", "Coal"],
+  "de": ["Heizöl", "Erdgas", "Kohle"]
+}
+
+const units_map = {
+  "en": {"kWh": 0, "liter": 1, "kg": 2, "m³": 3, "GJ": 4 },
+  "de": { "kWh": 0, "Liter": 1, "kg": 2, "m³": 3, "GJ": 4 }
+}
 
 // Emissionsfaktoren (kg CO2 pro kWh)
 const emission_factors = {
-  "Gas Oil": 0.2639,        // kg CO₂ / kWh
-  "Natural Gas": 0.184,
-  "Coal": 0.3406
-};
+  "en": {"Gas Oil": 0.2639, "Natural Gas": 0.184, "Coal": 0.3406},    
+  "de": {"Heizöl": 0.2639, "Erdgas": 0.184,  "Kohle": 0.3406}      
+}
 
 // Länder & VAT Werte
-const vats = {
+const vats_en = {
   "Austria":         { "Gas Oil": 0.20,  "Natural Gas": 0.20,  "Coal": 0.20 },
   "Belgium":         { "Gas Oil": 0.21,  "Natural Gas": 0.06,  "Coal": 0.12 },
   "Bulgaria":        { "Gas Oil": 0.20,  "Natural Gas": 0.20,  "Coal": 0.20 },
@@ -293,41 +649,100 @@ const vats = {
   "Slovenia":        { "Gas Oil": 0.22,  "Natural Gas": 0.22,  "Coal": 0.22 },
   "Slovak Republic": { "Gas Oil": 0.23,  "Natural Gas": 0.23,  "Coal": 0.23 }
 };
-
+const vats_de = {
+  "Österreich":      { "Heizöl": 0.20,  "Erdgas": 0.20,  "Kohle": 0.20 },
+  "Belgien":         { "Heizöl": 0.21,  "Erdgas": 0.06,  "Kohle": 0.12 },
+  "Bulgarien":       { "Heizöl": 0.20,  "Erdgas": 0.20,  "Kohle": 0.20 },
+  "Zypern":          { "Heizöl": 0.19,  "Erdgas": 0.19,  "Kohle": 0.19 },
+  "Tschechien":      { "Heizöl": 0.21,  "Erdgas": 0.21,  "Kohle": 0.21 },
+  "Deutschland":     { "Heizöl": 0.19,  "Erdgas": 0.19,  "Kohle": 0.19 },
+  "Dänemark":        { "Heizöl": 0.25,  "Erdgas": 0.25,  "Kohle": 0.25 },
+  "Estland":         { "Heizöl": 0.22,  "Erdgas": 0.22,  "Kohle": 0.22 },
+  "Griechenland":    { "Heizöl": 0.24,  "Erdgas": 0.06,  "Kohle": 0.24 },
+  "Spanien":         { "Heizöl": 0.21,  "Erdgas": 0.21,  "Kohle": 0.21 },
+  "Finnland":        { "Heizöl": 0.255, "Erdgas": 0.255, "Kohle": 0.255 },
+  "Frankreich":      { "Heizöl": 0.20,  "Erdgas": 0.20,  "Kohle": 0.20 },
+  "Ungarn":          { "Heizöl": 0.27,  "Erdgas": 0.00,  "Kohle": 0.00 },
+  "Kroatien":        { "Heizöl": 0.25,  "Erdgas": 0.25,  "Kohle": 0.25 },
+  "Irland":          { "Heizöl": 0.135, "Erdgas": 0.09,  "Kohle": 0.135 },
+  "Italien":         { "Heizöl": 0.22,  "Erdgas": 0.22,  "Kohle": 0.22 },
+  "Litauen":         { "Heizöl": 0.21,  "Erdgas": 0.21,  "Kohle": 0.21 },
+  "Luxemburg":       { "Heizöl": 0.14,  "Erdgas": 0.08,  "Kohle": 0.14 },
+  "Lettland":        { "Heizöl": 0.21,  "Erdgas": 0.21,  "Kohle": 0.21 },
+  "Malta":           { "Heizöl": 0.18,  "Erdgas": 0.18,  "Kohle": 0.18 },
+  "Niederlande":     { "Heizöl": 0.21,  "Erdgas": 0.21,  "Kohle": 0.21 },
+  "Polen":           { "Heizöl": 0.23,  "Erdgas": 0.23,  "Kohle": 0.23 },
+  "Portugal":        { "Heizöl": 0.13,  "Erdgas": 0.23,  "Kohle": 0.23 },
+  "Rumänien":        { "Heizöl": 0.19,  "Erdgas": 0.19,  "Kohle": 0.19 },
+  "Schweden":        { "Heizöl": 0.25,  "Erdgas": 0.25,  "Kohle": 0.25 },
+  "Slowenien":       { "Heizöl": 0.22,  "Erdgas": 0.22,  "Kohle": 0.22 },
+  "Slowakei":        { "Heizöl": 0.23,  "Erdgas": 0.23,  "Kohle": 0.23 }
+}
+const vats = {"en": vats_en, "de": vats_de}
 
 // Bestehende Preise (€/kWh)
-const existing_price = {
-  "Austria":        { "Gas Oil": 0.01188, "Natural Gas": 0.00828, "Coal": 0.01533 },
-  "Belgium":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Bulgaria":       { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Cyprus":         { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Czechia":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Germany":        { "Gas Oil": 0.01451, "Natural Gas": 0.01012, "Coal": 0.01873 },
-  "Denmark":        { "Gas Oil": 0.00612, "Natural Gas": 0.00522, "Coal": 0.00866 },
-  "Estonia":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Greece":         { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Spain":          { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Finland":        { "Gas Oil": 0.01795, "Natural Gas": 0.01294, "Coal": 0.01848 },
-  "France":         { "Gas Oil": 0.01177, "Natural Gas": 0.00821, "Coal": 0.01519 },
-  "Hungary":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Croatia":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Ireland":        { "Gas Oil": 0.01676, "Natural Gas": 0.01030, "Coal": 0.01907 },
-  "Italy":          { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Lithuania":      { "Gas Oil": 0.00486, "Natural Gas": 0.00000, "Coal": 0.00505 },
-  "Luxembourg":     { "Gas Oil": 0.00851, "Natural Gas": 0.00707, "Coal": 0.00000 },
-  "Latvia":         { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Malta":          { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Netherlands":    { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Poland":         { "Gas Oil": 0.00002, "Natural Gas": 0.00002, "Coal": 0.00003 },
-  "Portugal":       { "Gas Oil": 0.01513, "Natural Gas": 0.01361, "Coal": 0.01909 },
-  "Romania":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
-  "Sweden":         { "Gas Oil": 0.03236, "Natural Gas": 0.00073, "Coal": 0.04228 },
-  "Slovenia":       { "Gas Oil": 0.00457, "Natural Gas": 0.00318, "Coal": 0.00589 },
-  "Slovak Republic":{ "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 }
+const existing_price_en = {
+  "Austria":      { "Gas Oil": 0.01451, "Natural Gas": 0.01012, "Coal": 0.01873 },
+  "Belgium":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Bulgaria":     { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Cyprus":       { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Czechia":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Germany":      { "Gas Oil": 0.01451, "Natural Gas": 0.01012, "Coal": 0.01873 },
+  "Denmark":      { "Gas Oil": 0.02639, "Natural Gas": 0.01840, "Coal": 0.03406 },
+  "Estonia":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Greece":       { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Spain":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Finland":      { "Gas Oil": 0.01481, "Natural Gas": 0.01294, "Coal": 0.02145 },
+  "France":       { "Gas Oil": 0.01177, "Natural Gas": 0.00821, "Coal": 0.01519 },
+  "Hungary":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Croatia":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Ireland":      { "Gas Oil": 0.01676, "Natural Gas": 0.01168, "Coal": 0.02163 },
+  "Italy":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Lithuania":    { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Luxembourg":   { "Gas Oil": 0.01056, "Natural Gas": 0.00736, "Coal": 0.01362 },
+  "Latvia":       { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Malta":        { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Netherlands":  { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Poland":       { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Portugal":     { "Gas Oil": 0.01779, "Natural Gas": 0.01240, "Coal": 0.02295 },
+  "Romania":      { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Sweden":       { "Gas Oil": 0.03536, "Natural Gas": 0.02466, "Coal": 0.04564 },
+  "Slovenia":     { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 },
+  "Slovak Republic": { "Gas Oil": 0.00000, "Natural Gas": 0.00000, "Coal": 0.00000 }
 };
+const existing_price_de = {
+  "Österreich":   { "Heizöl": 0.01451, "Erdgas": 0.01012, "Kohle": 0.01873 },
+  "Belgien":      { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Bulgarien":    { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Zypern":       { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Tschechien":   { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Deutschland":  { "Heizöl": 0.01451, "Erdgas": 0.01012, "Kohle": 0.01873 },
+  "Dänemark":     { "Heizöl": 0.02639, "Erdgas": 0.01840, "Kohle": 0.03406 },
+  "Estland":      { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Griechenland": { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Spanien":      { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Finnland":     { "Heizöl": 0.01481, "Erdgas": 0.01294, "Kohle": 0.02145 },
+  "Frankreich":   { "Heizöl": 0.01177, "Erdgas": 0.00821, "Kohle": 0.01519 },
+  "Ungarn":       { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Kroatien":     { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Irland":       { "Heizöl": 0.01676, "Erdgas": 0.01168, "Kohle": 0.02163 },
+  "Italien":      { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Litauen":      { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Luxemburg":    { "Heizöl": 0.01056, "Erdgas": 0.00736, "Kohle": 0.01362 },
+  "Lettland":     { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Malta":        { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Niederlande":  { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Polen":        { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Portugal":     { "Heizöl": 0.01779, "Erdgas": 0.01240, "Kohle": 0.02295 },
+  "Rumänien":     { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Schweden":     { "Heizöl": 0.03536, "Erdgas": 0.02466, "Kohle": 0.04564 },
+  "Slowenien":    { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 },
+  "Slowakei":     { "Heizöl": 0.00000, "Erdgas": 0.00000, "Kohle": 0.00000 }
+};
+const existing_price = {"en": existing_price_en, "de": existing_price_de}
 
 // Konversionfaktoren von Einheit zu kWh
-const conversion_factors = {
+const conversion_factors_en = {
   "Coal": {
     "kWh":     { "kWh": 1,       "kg": 0.125,        "GJ": 0.0036 },
     "liter":   { "liter": 1 },
@@ -350,15 +765,38 @@ const conversion_factors = {
     "GJ":      { "kWh": 277.7778, "liter": 25.2060,  "kg": 21.9298,       "GJ": 1.0000 }
   }
 };
-
+const conversion_factors_de = {
+  "Kohle": {
+    "kWh":     { "kWh": 1,       "kg": 0.125,        "GJ": 0.0036 },
+    "Liter":   { "Liter": 1 },
+    "kg":      { "kWh": 8,       "kg": 1,            "GJ": 0.0288 },
+    "m³":      { "m³": 1 },
+    "GJ":      { "kWh": 277.7778, "kg": 34.72222222, "GJ": 1 }
+  },
+  "Erdgas": {
+    "kWh":     { "kWh": 1,       "m³": 0.1,          "GJ": 0.0036 },
+    "Liter":   { "Liter": 1 },
+    "kg":      { "kg": 1 },
+    "m³":      { "kWh": 10,      "m³": 1,            "GJ": 0.036 },
+    "GJ":      { "kWh": 277.7778, "m³": 27.77777778, "GJ": 1 }
+  },
+  "Heizöl": {
+    "kWh":     { "kWh": 1.0000,  "Liter": 0.0907,    "kg": 0.0789,        "GJ": 0.0036 },
+    "Liter":   { "kWh": 11.0200, "Liter": 1.0000,    "kg": 0.8700,        "GJ": 0.0397 },
+    "kg":      { "kWh": 12.6667, "Liter": 1.1494,    "kg": 1.0000,        "GJ": 0.0456 },
+    "m³":      { "m³": 1.0000 },
+    "GJ":      { "kWh": 277.7778, "Liter": 25.2060,  "kg": 21.9298,       "GJ": 1.0000 }
+  }
+};
+const conversion_factors = {"en": conversion_factors_en, "de": conversion_factors_de}
 
 //////////////////////////////////////////////////////////
 // Hilfsfunktionen ohne direkten Einfluss auf UI
 
 
-function fuelConversionToKwh(unit, fuel, consumption) {
-  const factorObj = conversion_factors[fuel][unit]; // z.B. { kWh: 1, m³: 0.1, GJ: 0.0036 }
-  const factor = factorObj["kWh"]; // Faktor, um von 'unit' zu 'kWh' umzuwandeln
+function fuelConversionToKwh(unit, fuel, consumption, lang) {
+  const factorObj = conversion_factors[lang][fuel][unit];
+  const factor = factorObj["kWh"];
   if (factor === undefined) {
     // falls keine Umrechnung vorhanden, Fehlerbehandlung
     return NaN;
@@ -367,23 +805,23 @@ function fuelConversionToKwh(unit, fuel, consumption) {
 }
 
 
-function calculateAdditionalCosts(fuel, unit, consumption, co2_price) {
+function calculateAdditionalCosts(fuel, unit, consumption, co2_price, lang) {
   const co2_price_per_kg = co2_price / 1000;
   const add_price_per_kwh = {};
 
-  for (const country in vats) {
+  for (const country of Object.keys(vats[lang])) {
     // Zusatzkosten pro kWh
-    let addCost = co2_price_per_kg * emission_factors[fuel];
-    addCost *= (1 + vats[country][fuel]);
-    addCost -= existing_price[country][fuel];
+    let addCost = co2_price_per_kg * emission_factors[lang][fuel];
+    addCost -= existing_price[lang][country][fuel]; // first subtract the existing price
+    addCost *= (1 + vats[lang][country][fuel]); // add the VAT that is collected on the additional costs
     add_price_per_kwh[country] = addCost;
   }
 
-  const consumption_kwh = fuelConversionToKwh(unit, fuel, consumption);
+  const consumption_kwh = fuelConversionToKwh(unit, fuel, consumption, lang);
   
   const costs = {};
   for (const country in add_price_per_kwh) {
-    costs[country] = +(add_price_per_kwh[country] * consumption_kwh).toFixed(2);
+    costs[country] = (add_price_per_kwh[country] * consumption_kwh).toFixed(2);
   }
   return costs;
 }
@@ -399,13 +837,16 @@ const consumptionInput = document.getElementById("consumption");
 const fuelDropdown = document.getElementById("fuel_dropdown");
 const unitDropdown = document.getElementById("unit_dropdown");
 const countryDropdown = document.getElementById("country_dropdown");
+let currentLang = "de"
 
 
 function init() {
 
+    lang = currentLang
 
-    populateCountryDropdown();
-    updateUnitDropdownOptions();
+    populateFuelDropdown(lang)
+    populateCountryDropdown(lang);
+    updateUnitDropdownOptions(lang);
 
     slider.addEventListener("input", () => {
         priceInput.value = slider.value;
@@ -447,40 +888,109 @@ function init() {
         updateAll();
     });
 
-    fuelDropdown.addEventListener("change", () => {
-        updateUnitDropdownOptions();
-        updateAll();
-    });
-    
+    fuelDropdown.addEventListener("change", updateAll);
     unitDropdown.addEventListener("change", updateAll);
-    consumption.addEventListener("input", updateAll);
+    consumptionInput.addEventListener("input", updateAll);
     countryDropdown.addEventListener("change", updateAll);
+
 
     updateAll();
 }
 
 
 
-function populateCountryDropdown() {
+function populateCountryDropdown(lang) {
   const countryDropdown = document.getElementById("country_dropdown");
   countryDropdown.innerHTML = ""; // alles löschen
 
   // Für jedes Land im Objekt vats eine Option erzeugen
-  for (const country of Object.keys(vats)) {
+  const country_array = Object.keys(vats[lang]).sort();
+  for (const country of country_array) {
     const option = document.createElement("option");
     option.value = country;
     option.textContent = country;
     countryDropdown.appendChild(option);
   }
 
-  // Optional: Standard-Auswahl auf z.B. Deutschland setzen
-  countryDropdown.value = "Germany"; // falls vorhanden
+  // Standard-Auswahl auf Deutschland setzen
+  if (lang === "de") {
+    countryDropdown.value = "Deutschland";
+  }
+  else if (lang === "en") {
+    countryDropdown.value = "Germany";
+  }
 }
 
+function populateFuelDropdown(lang) {
+  const fuelDropdown = document.getElementById("fuel_dropdown");
+  fuelDropdown.innerHTML = "";
+
+  const fuel_array = fuel_types[lang].sort();
+  for (const fuel of fuel_array) {
+    const option = document.createElement("option");
+    option.value = fuel;
+    option.textContent = fuel;
+    fuelDropdown.appendChild(option);
+  }
+
+  // Standard-Auswahl auf Deutschland setzen
+  if (lang === "de") {
+    fuelDropdown.value = "Erdgas";
+  }
+  else if (lang === "en") {
+    fuelDropdown.value = "Natural Gas";
+  }
+}
+
+// Update Unit Dropdown je nach Fuel
+function updateUnitDropdownOptions(lang) {
+  const fuel = fuelDropdown.value;
+  console.log("Sprache:", lang);
+  console.log("Gewählter Brennstoff:", fuel);
+  let unitsToShow = [];
+  if (lang === "en") {
+    if (fuel === "Gas Oil") unitsToShow = ["kWh","liter","kg","GJ"];
+    else if (fuel === "Natural Gas") unitsToShow = ["kWh","m³","GJ"];
+    else if (fuel === "Coal") unitsToShow = ["kWh","kg","GJ"];
+  }
+  if (lang === "de") {
+    if (fuel === "Heizöl") unitsToShow = ["kWh","Liter","kg","GJ"];
+    else if (fuel === "Erdgas") unitsToShow = ["kWh","m³","GJ"];
+    else if (fuel === "Kohle") unitsToShow = ["kWh","kg","GJ"];
+  }
+  unitDropdown.innerHTML = "";
+  for (const u of unitsToShow) {
+    const option = document.createElement("option");
+    option.value = u;
+    option.textContent = u;
+    unitDropdown.appendChild(option);
+  }
+  unitDropdown.value = unitsToShow[0];
+}
 
 //////////////////////////////////////////////////////////
 // Funktionen für Interaktivität
 
+
+function switchLanguage(lang) {
+  // Alle Sprachblöcke ausblenden
+  document.querySelectorAll('[class^="lang-"]').forEach(el => el.classList.add('hidden'));
+
+  // Gewählte Sprache anzeigen
+  document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('hidden'));
+  populateCountryDropdown(lang)
+  populateFuelDropdown(lang)
+  currentLang = lang
+  updateAll()
+}
+
+function showExplanation() {
+  document.querySelector('.container').style.transform = 'translateX(-100vw)';
+}
+
+function hideExplanation() {
+  document.querySelector('.container').style.transform = 'translateX(0)';
+}
 
 function updateSliderMarks(maxVal) {
   const midVal = Math.round(maxVal / 2);
@@ -493,56 +1003,52 @@ function updateSliderMarks(maxVal) {
 }
 
 
-// Update Unit Dropdown je nach Fuel
-function updateUnitDropdownOptions() {
-  const fuel = fuelDropdown.value;
-  let unitsToShow = [];
-  if (fuel === "Gas Oil") unitsToShow = ["kWh","liter","kg","GJ"];
-  else if (fuel === "Natural Gas") unitsToShow = ["kWh","m³","GJ"];
-  else if (fuel === "Coal") unitsToShow = ["kWh","kg","GJ"];
-  
-  unitDropdown.innerHTML = "";
-  for (const u of unitsToShow) {
-    const option = document.createElement("option");
-    option.value = u;
-    option.textContent = u;
-    unitDropdown.appendChild(option);
-  }
-  unitDropdown.value = unitsToShow[0];
-}
-
-
-
-
-
 function updateAll() {
+
   const fuel = fuelDropdown.value;
   const unit = unitDropdown.value;
   const consumption = Number(consumptionInput.value);
   const co2Price = Number(priceInput.value);
   const country = countryDropdown.value;
+  let lang = currentLang;
 
+  updateUnitDropdownOptions(lang);
+  
   if (!fuel || !unit || !consumption || !country || isNaN(consumption) || isNaN(co2Price)) {
     document.getElementById("costs_text_output").textContent = "-";
     Plotly.newPlot("map", []);
     return;
   }
 
-  const costs = calculateAdditionalCosts(fuel, unit, consumption, co2Price);
+  const costs = calculateAdditionalCosts(fuel, unit, consumption, co2Price, lang);
   document.getElementById("costs_text_output").textContent = costs[country] + " €";
 
   // Daten für Map vorbereiten
   const locations = Object.keys(costs);
+  let locations_en = []
+  if (lang === "de") {
+    for (c of locations) {
+      locations_en.push(countryNameMap_de_to_en[c])
+    }
+  }
+  else if (lang === "en") {
+    locations_en = locations
+  }
   const values = Object.values(costs);
+  let legendTitle = "Title";
+  if (lang === "en") legendTitle = "Costs (€/a)";
+  else if (lang === "de") legendTitle = "Kosten (€/a)";
 
+  
   const data = [{
     type: 'choropleth',
     locationmode: 'country names',
-    locations: locations,
+    locations: locations_en,
     z: values,
+    text: locations,
     colorscale: 'rBlues',
     colorbar: {
-      title: 'Costs (€)',
+      title: legendTitle,
       ticksuffix: ' €',
     },
     marker: {
